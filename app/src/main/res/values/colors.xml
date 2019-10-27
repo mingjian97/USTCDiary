@@ -5,4 +5,6 @@
     <color name="colorAccent">#D81B60</color>
     <color name="colorStyle1">#F75748</color>
     <color name="colorStyle2">#03A9F4</color>
+    <color name="memo_icon_tint">#718698</color>
+    <color name="topic_divider">#CACACA</color>
 </resources>

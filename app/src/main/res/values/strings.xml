@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">USTCDiary</string>
     <string name="user_name">你的名字</string>
+    <string name="memo_item_add">Add</string>
 </resources>
