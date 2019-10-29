@@ -1,5 +1,6 @@
 package com.grouptwo.ustcdiary.topicActivity;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.view.LayoutInflater;
@@ -10,6 +11,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.grouptwo.ustcdiary.topicActivity.EditMemoDialogFragment.MemoCallback;
@@ -22,20 +25,25 @@ import java.util.List;
  * User: mingjian
  * Date: 2019/10/23
  */
-public class MemoAdapter extends RecyclerView.Adapter<MemoAdapter.MyHolder> implements ItemTouchHelperAdapter{
 
-    private Context context;
+/**
+ * 备忘录视图中recyclerView 的适配器
+ * 对recyclerView进行数据填充
+ */
+public class MemoAdapter extends RecyclerView.Adapter<MemoAdapter.MyHolder>{
+
+    private FragmentActivity mActivity;
     private List<MemoEntity> list;
     private boolean isEditMode = false;
     private DBHelper dbHelper;
     private MemoCallback callback;
 
-    public MemoAdapter(Context context, List<MemoEntity>list,DBHelper dbHelper){
+    public MemoAdapter(FragmentActivity mActivity, List<MemoEntity>list, DBHelper dbHelper){
         try {
-            this.callback = (MemoCallback) context;
+            this.callback = (MemoCallback) mActivity;
         }catch (ClassCastException e) {
         }
-        this.context=context;
+        this.mActivity=mActivity;
         this.list=list;
         this.dbHelper=dbHelper;
     }
@@ -92,23 +100,27 @@ public class MemoAdapter extends RecyclerView.Adapter<MemoAdapter.MyHolder> impl
             switch (view.getId()) {
                 case R.id.IV_memo_item_delete:
                     SQLiteDatabase db= dbHelper.getWritableDatabase();
-                    db.delete("memo","_id=?",new String[]{String.valueOf(list.get(itemPosition).getMemoId())});
+//                    db.delete("memo","_id=?",new String[]{String.valueOf(list.get(itemPosition).getMemoId())});
+                    //数据删除并不是真的删，只是在数据库中将该记录isDeleted字段置为1，在显示的时候只显示值为0的数据
+                    ContentValues value=new ContentValues();
+                    value.put("isDeleted",1);
+                    db.update("memo",value,"_id=?",new String[]{String.valueOf(list.get(itemPosition).getMemoId())});
                     callback.addMemo(2);
                     notifyDataSetChanged();
                     break;
-//                case R.id.RL_memo_item_root_view:
-//                    if (isEditMode) {
-//                        EditMemoDialogFragment editMemoDialogFragment = EditMemoDialogFragment.newInstance(
-//                                topicId, memoList.get(itemPosition).getMemoId(), false, memoList.get(itemPosition).getContent());
-//                        editMemoDialogFragment.show(mActivity.getSupportFragmentManager(), "editMemoDialogFragment");
-//                    } else {
-//                        memoList.get(itemPosition).toggleChecked();
+                case R.id.RL_memo_item_root_view:
+                    if (!isEditMode) {
+                        EditMemoDialogFragment editMemoDialogFragment = EditMemoDialogFragment.newInstance(
+                                list.get(itemPosition).getMemoId(), false, list.get(itemPosition).getContent());
+                        editMemoDialogFragment.show(mActivity.getSupportFragmentManager(), "editMemoDialogFragment");
+                    } else {
+//                        list.get(itemPosition).toggleChecked();
 //                        dbManager.opeDB();
 //                        dbManager.updateMemoChecked(memoList.get(itemPosition).getMemoId(), memoList.get(itemPosition).isChecked());
 //                        dbManager.closeDB();
 //                        setMemoContent(this, itemPosition);
-//                    }
-//                    break;
+                    }
+                    break;
             }
         }
     }
@@ -127,12 +139,7 @@ public class MemoAdapter extends RecyclerView.Adapter<MemoAdapter.MyHolder> impl
         holder.setText(memo.getContent());
         holder.setItemPosition(position);
         holder.initView();
-//        if (holder instanceof MyHolder) {
-//        ((MyHolder) holder).setItemPosition(position);
-//            ((MyHolder) holder).initView();
-//            setMemoContent(((MemoViewHolder) holder), position);
         }
-
 
     @Override
     public int getItemCount() {
@@ -147,18 +154,4 @@ public class MemoAdapter extends RecyclerView.Adapter<MemoAdapter.MyHolder> impl
         isEditMode = editMode;
     }
 
-    @Override
-    public void onItemMove(int fromPosition, int toPosition) {
-
-    }
-
-    @Override
-    public void onItemSwap(int position) {
-
-    }
-
-    @Override
-    public void onItemMoveFinish() {
-
-    }
 }

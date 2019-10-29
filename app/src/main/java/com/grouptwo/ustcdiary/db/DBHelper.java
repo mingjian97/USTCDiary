@@ -12,6 +12,7 @@ public class DBHelper extends SQLiteOpenHelper{
         super(context,name,factory,version);
     }
 
+    //创建备忘录的数据库
     @Override
     public void onCreate(SQLiteDatabase db) {
         String sql = "create table memo(_id integer primary key autoincrement,content text,isDeleted integer)";

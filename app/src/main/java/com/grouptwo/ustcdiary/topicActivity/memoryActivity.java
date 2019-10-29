@@ -23,6 +23,7 @@ import com.grouptwo.ustcdiary.db.DBHelper;
 import java.util.ArrayList;
 import java.util.List;
 
+//备忘录activity
 public class memoryActivity extends AppCompatActivity implements View.OnClickListener,EditMemoDialogFragment.MemoCallback{
 
     //UI
@@ -40,6 +41,7 @@ public class memoryActivity extends AppCompatActivity implements View.OnClickLis
     private List<MemoEntity> memoList;
     private ItemTouchHelper touchHelper;
 
+    //是否显示编辑界面
     boolean Flags;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,19 +51,16 @@ public class memoryActivity extends AppCompatActivity implements View.OnClickLis
         dbhelper=new DBHelper(getApplicationContext(),"memo",null,1);
 
         //init UI
-
         RL_memo_topbar_content=(RelativeLayout)findViewById(R.id.RL_memo_toolbar_content);
-//        RL_memo_topbar_content.setBackgroundColor();
         RL_memo_content_bg=(RelativeLayout)findViewById(R.id.RL_memo_content_bg);
-
         TV_memotopbar_title=(TextView)findViewById(R.id.TV_memo_topbar_title);
         IV_memo_edit=(ImageView)findViewById(R.id.IV_memo_edit);
         IV_memo_edit.setOnClickListener(this);
-
         rootView=findViewById(R.id.Layout_memo_item_add);
         rootView.setOnClickListener(this);
         TV_memo_item_add=(TextView)rootView.findViewById(R.id.TV_memo_item_add);
         RecyclerView_memo=(RecyclerView)findViewById(R.id.RecyclerView_memo);
+        //从数据库中提取数据
         memoList=new ArrayList<>();
         loadMemo();
         initMemoAdapter();
@@ -88,8 +87,10 @@ public class memoryActivity extends AppCompatActivity implements View.OnClickLis
         //利用游标遍历所有数据对象
         while(cursor.moveToNext()){
             MemoEntity memo=new MemoEntity(cursor.getInt(0),cursor.getString(1),cursor.getInt(2));
-            if(memo.getIsDeleted()==0)
+            System.out.println(memo.getMemoId()+"-----"+memo.getContent()+"------"+memo.getIsDeleted());
+            if(memo.getIsDeleted()==0){
                 memoList.add(memo);
+            }
         }
         cursor.close();
     }
@@ -112,7 +113,7 @@ public class memoryActivity extends AppCompatActivity implements View.OnClickLis
                 }
                 break;
             case R.id.Layout_memo_item_add:
-                EditMemoDialogFragment editMemoDialogFragment=EditMemoDialogFragment.newInstance(111,-1,true,"");
+                EditMemoDialogFragment editMemoDialogFragment=EditMemoDialogFragment.newInstance(-1,true,"");
                 editMemoDialogFragment.show(getSupportFragmentManager(),"editMemoDialogFragment");
         }
     }
@@ -122,7 +123,7 @@ public class memoryActivity extends AppCompatActivity implements View.OnClickLis
             Cursor cursor = db.query("memo", null, "isDeleted=?",new String[]{"0"}, null, null, "_id desc");
             //利用游标遍历所有数据对象
             cursor.moveToFirst();
-                memoList.add(new MemoEntity(cursor.getInt(0),cursor.getString(1),cursor.getInt(2)));
+            memoList.add(new MemoEntity(cursor.getInt(0),cursor.getString(1),cursor.getInt(2)));
             cursor.close();
         }
         else if(flag==2){
@@ -132,6 +133,7 @@ public class memoryActivity extends AppCompatActivity implements View.OnClickLis
 
     @Override
     public void updateMemo() {
-
+        loadMemo();
+        memoAdapter.notifyDataSetChanged();
     }
 }

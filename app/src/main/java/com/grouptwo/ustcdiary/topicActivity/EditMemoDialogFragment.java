@@ -9,8 +9,10 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,6 +25,7 @@ import com.grouptwo.ustcdiary.db.DBHelper;
  * Created with IntelliJ IDEA.
  * User: mingjian
  * Date: 2019/10/23
+ * 备忘录弹窗，用于对备忘录的填写
  */
 public class EditMemoDialogFragment extends DialogFragment implements View.OnClickListener {
 
@@ -39,11 +42,17 @@ public class EditMemoDialogFragment extends DialogFragment implements View.OnCli
     private Button btn_edit_memo_cancel;
     private EditText EDT_edit_memo_content;
     private DBHelper dbhelper;
+    /**
+     * Info
+     */
+    //default = -1 , it means add memo.
+    private long memoId = -1;
+    private boolean isAdd = true;
+    private String memoContent = "";
 
-    public static EditMemoDialogFragment newInstance(long topicId, long memoId, boolean isAdd, String memoContent) {
+    public static EditMemoDialogFragment newInstance(long memoId, boolean isAdd, String memoContent) {
         Bundle args = new Bundle();
         EditMemoDialogFragment fragment = new EditMemoDialogFragment();
-        args.putLong("topicId", topicId);
         args.putLong("memoId", memoId);
         args.putBoolean("isAdd", isAdd);
         args.putString("memoContent", memoContent);
@@ -69,10 +78,22 @@ public class EditMemoDialogFragment extends DialogFragment implements View.OnCli
         btn_edit_memo_cancel.setOnClickListener(this);
         btn_edit_memo_ok.setOnClickListener(this);
 
-
-
         return rootView;
     }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        memoId=getArguments().getLong("memoId",-1L);
+        isAdd=getArguments().getBoolean("isAdd",true);
+        memoContent=getArguments().getString("memoContent","");
+        EDT_edit_memo_content.setText(memoContent);
+        //For show keyboard
+        EDT_edit_memo_content.requestFocus();
+        getDialog().getWindow().
+                setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+    }
+
 
     @NonNull
     @Override
@@ -90,6 +111,32 @@ public class EditMemoDialogFragment extends DialogFragment implements View.OnCli
         }
     }
 
+    public void okButtonEvent(){
+        if (EDT_edit_memo_content.getText().toString().length() > 0) {
+            if (isAdd) {
+                SQLiteDatabase db=dbhelper.getWritableDatabase();
+                ContentValues values=new ContentValues();
+                values.put("content",EDT_edit_memo_content.getText().toString());
+                values.put("isDeleted",0);
+                db.insert("memo",null,values);
+                callback.addMemo(1);
+                db.close();
+            } else {
+                if(memoId!=-1){
+                    System.out.println("---------------------------------");
+                    SQLiteDatabase db=dbhelper.getWritableDatabase();
+                    ContentValues value=new ContentValues();
+                    value.put("content",EDT_edit_memo_content.getText().toString());
+                    db.update("memo",value,"_id=?",new String[]{String.valueOf(memoId)});
+                    db.close();
+                }
+                callback.updateMemo();
+            }
+            dismiss();
+        } else {
+            Toast.makeText(getActivity(),"不能为空！", Toast.LENGTH_SHORT).show();
+        }
+    }
     @Override
     public void onClick(View view) {
         switch(view.getId()){
@@ -97,26 +144,7 @@ public class EditMemoDialogFragment extends DialogFragment implements View.OnCli
                 dismiss();
                 break;
             case R.id.btn_edit_memo_ok:
-                if(EDT_edit_memo_content.getText().toString().length()>0){
-                    SQLiteDatabase db=dbhelper.getWritableDatabase();
-                    ContentValues values=new ContentValues();
-                    values.put("content",EDT_edit_memo_content.getText().toString());
-                    values.put("isDeleted",0);
-                    db.insert("memo",null,values);
-                    callback.addMemo(1);
-//                    Cursor cursor = db.query("memo", null, null, null, null, null, null);
-                    //利用游标遍历所有数据对象
-                    //为了显示全部，把所有对象连接起来，放到TextView中
-//                    String textview_data = "111";
-//                    while(cursor.moveToNext()){
-//                        String content = cursor.getString(1);
-//                        textview_data = textview_data + "," + content;
-//                    }
-//                    System.out.println(textview_data);
-
-                    db.close();
-
-                }
+                okButtonEvent();
                 dismiss();
                 break;
 
