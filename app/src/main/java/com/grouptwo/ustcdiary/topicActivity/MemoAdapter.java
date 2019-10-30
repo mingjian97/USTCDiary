@@ -79,17 +79,14 @@ public class MemoAdapter extends RecyclerView.Adapter<MemoAdapter.MyHolder>{
         }
 
         private void initView() {
-            IV_memo_item_dot.setImageResource(R.drawable.ic_memo_dot_24dp);
             if (isEditMode) {
-//                IV_memo_item_dot.setImageResource(R.drawable.ic_memo_swap_vert_black_24dp);
+                IV_memo_item_dot.setImageResource(R.drawable.ic_memo_swap_vert_black_24dp);
                 IV_memo_item_delete.setVisibility(View.VISIBLE);
-//                IV_memo_item_dot.setOnTouchListener(this);
                 IV_memo_item_delete.setOnClickListener(this);
                 RL_memo_item_root_view.setOnClickListener(this);
             } else {
-
+                IV_memo_item_dot.setImageResource(R.drawable.ic_memo_dot_24dp);
                 IV_memo_item_delete.setVisibility(View.GONE);
-                IV_memo_item_dot.setOnTouchListener(null);
                 IV_memo_item_delete.setOnClickListener(null);
                 RL_memo_item_root_view.setOnClickListener(this);
             }
@@ -104,6 +101,7 @@ public class MemoAdapter extends RecyclerView.Adapter<MemoAdapter.MyHolder>{
                     //数据删除并不是真的删，只是在数据库中将该记录isDeleted字段置为1，在显示的时候只显示值为0的数据
                     ContentValues value=new ContentValues();
                     value.put("isDeleted",1);
+                    value.put("ordernum",-1);
                     db.update("memo",value,"_id=?",new String[]{String.valueOf(list.get(itemPosition).getMemoId())});
                     callback.addMemo(2);
                     notifyDataSetChanged();

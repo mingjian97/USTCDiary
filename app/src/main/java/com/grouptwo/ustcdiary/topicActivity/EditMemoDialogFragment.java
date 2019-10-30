@@ -118,6 +118,7 @@ public class EditMemoDialogFragment extends DialogFragment implements View.OnCli
                 ContentValues values=new ContentValues();
                 values.put("content",EDT_edit_memo_content.getText().toString());
                 values.put("isDeleted",0);
+                values.put("ordernum",-1);
                 db.insert("memo",null,values);
                 callback.addMemo(1);
                 db.close();

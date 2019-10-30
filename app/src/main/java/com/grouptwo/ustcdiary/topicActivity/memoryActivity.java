@@ -4,11 +4,13 @@ package com.grouptwo.ustcdiary.topicActivity;
  * User: mingjian
  * Date: 2019/10/23
  */
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -21,6 +23,7 @@ import com.grouptwo.ustcdiary.R;
 import com.grouptwo.ustcdiary.db.DBHelper;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 //备忘录activity
@@ -74,20 +77,63 @@ public class memoryActivity extends AppCompatActivity implements View.OnClickLis
         RecyclerView_memo.setHasFixedSize(true);
         memoAdapter = new MemoAdapter(this, memoList,dbhelper);
         RecyclerView_memo.setAdapter(memoAdapter);
-        //Set ItemTouchHelper
-//        ItemTouchHelper.Callback callback =
-//                new MemoItemTouchHelperCallback(memoAdapter);
-//        touchHelper = new ItemTouchHelper(callback);
-//        touchHelper.attachToRecyclerView(RecyclerView_memo);
+
+        ItemTouchHelper.Callback callback = new ItemTouchHelper.Callback() {
+            @Override
+            public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                if(Flags){
+                    int swipFlag=0;
+                    int dragFlag=0;
+                    return makeMovementFlags(dragFlag,swipFlag);
+                }
+                else{
+                    int swipFlag=0;
+                    int dragFlag=ItemTouchHelper.UP| ItemTouchHelper.DOWN;
+                    return makeMovementFlags(dragFlag,swipFlag);
+                }
+            }
+
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                memoAdapter.notifyItemMoved(viewHolder.getAdapterPosition(),target.getAdapterPosition());
+                Collections.swap(memoList,viewHolder.getAdapterPosition(),target.getAdapterPosition());
+                return true;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+            }
+
+            @Override
+            public void onMoved(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, int fromPos, @NonNull RecyclerView.ViewHolder target, int toPos, int x, int y) {
+                super.onMoved(recyclerView, viewHolder, fromPos, target, toPos, x, y);
+            }
+
+            @Override
+            public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                super.clearView(recyclerView, viewHolder);
+                int order=1;
+                SQLiteDatabase db=dbhelper.getWritableDatabase();
+                for (MemoEntity memo : memoList) {
+                    ContentValues values=new ContentValues();
+                    values.put("ordernum",order++);
+                    db.update("memo",values,"_id=?",new String[]{String.valueOf(memo.getMemoId())});
+                }
+                db.close();
+                memoAdapter.notifyDataSetChanged();
+            }
+        };
+        ItemTouchHelper itemTouchHelper=new ItemTouchHelper(callback);
+        itemTouchHelper.attachToRecyclerView(RecyclerView_memo);
     }
     private void loadMemo() {
         memoList.clear();
         SQLiteDatabase db=dbhelper.getWritableDatabase();
-        Cursor cursor = db.query("memo", null, null,null, null, null, null);
+        Cursor cursor = db.query("memo", null, null,null, null, null, "ordernum asc");
         //利用游标遍历所有数据对象
         while(cursor.moveToNext()){
-            MemoEntity memo=new MemoEntity(cursor.getInt(0),cursor.getString(1),cursor.getInt(2));
-            System.out.println(memo.getMemoId()+"-----"+memo.getContent()+"------"+memo.getIsDeleted());
+            MemoEntity memo=new MemoEntity(cursor.getInt(0),cursor.getString(1),cursor.getInt(2),cursor.getInt(3));
+            System.out.println(memo.getMemoId()+"-----"+memo.getContent()+"------"+memo.getIsDeleted()+"--------"+memo.getOrderNum());
             if(memo.getIsDeleted()==0){
                 memoList.add(memo);
             }
@@ -123,12 +169,13 @@ public class memoryActivity extends AppCompatActivity implements View.OnClickLis
             Cursor cursor = db.query("memo", null, "isDeleted=?",new String[]{"0"}, null, null, "_id desc");
             //利用游标遍历所有数据对象
             cursor.moveToFirst();
-            memoList.add(new MemoEntity(cursor.getInt(0),cursor.getString(1),cursor.getInt(2)));
+            memoList.add(0,new MemoEntity(cursor.getInt(0),cursor.getString(1),cursor.getInt(2),cursor.getInt(3)));
             cursor.close();
         }
         else if(flag==2){
             loadMemo();
         }
+        memoAdapter.notifyDataSetChanged();
     }
 
     @Override

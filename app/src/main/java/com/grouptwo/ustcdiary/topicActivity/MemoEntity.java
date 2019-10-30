@@ -8,12 +8,23 @@ public class MemoEntity {
     private int memoId;
     private String content;
     private int isDeleted;
+    private int orderNum;
 
-    public MemoEntity(int memoId, String content, int isDeleted) {
+    public MemoEntity(int memoId, String content, int isDeleted,int orderNum) {
         this.memoId = memoId;
         this.content = content;
         this.isDeleted = isDeleted;
+        this.orderNum=orderNum;
     }
+
+    public int getOrderNum() {
+        return orderNum;
+    }
+
+    public void setOrderNum(int orderNum) {
+        this.orderNum = orderNum;
+    }
+
     public long getMemoId() {
         return memoId;
     }

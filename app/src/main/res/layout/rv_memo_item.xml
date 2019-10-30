@@ -12,10 +12,11 @@
 
     <ImageView
         android:id="@+id/IV_memo_item_dot"
-        android:layout_width="10dp"
-        android:layout_height="10dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:layout_centerVertical="true"
         android:layout_marginLeft="5dp"
+        android:scaleType="centerInside"
         android:src="@drawable/ic_memo_dot_24dp"
         android:tint="@color/memo_icon_tint" />
 
